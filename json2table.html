@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 2 Table</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .file-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #fileInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-container, .filter-container {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--secondary-color);
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .filter-stats {
+            background-color: #f5f5f5;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--secondary-color);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .filter-stats strong {
+            font-weight: bold;
+        }
+
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .remove-filter {
+            cursor: pointer;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            color: var(--dark-color);
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+        }
+
+        th:hover {
+            background-color: #34495e;
+        }
+
+        th::after {
+            content: "";
+            margin-left: 5px;
+        }
+
+        th.sort-asc::after {
+            content: "▲";
+            font-size: 12px;
+        }
+
+        th.sort-desc::after {
+            content: "▼";
+            font-size: 12px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            color: var(--dark-color);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .page-info {
+            font-weight: bold;
+        }
+
+        .items-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #itemsPerPage {
+            width: 80px;
+        }
+
+        .status-message {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .error {
+            background-color: #ffecec;
+            color: var(--accent-color);
+            border: 1px solid #f5aca6;
+        }
+
+        .success {
+            background-color: #e9ffd9;
+            color: var(--success-color);
+            border: 1px solid #a6ca8a;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .json-display {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .summary h3 {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON 2 Table</h1>
+            <p>Upload a JSON file with format [{...}, {...} ...] to visualize and analyze the data</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="file-input-container">
+                <input type="file" id="fileInput" accept=".json">
+                <button id="uploadBtn">Upload</button>
+            </div>
+            <div id="statusMessage" class="status-message hidden"></div>
+        </div>
+
+        <div id="dataContainer" class="hidden">
+            <div class="controls">
+                <div class="search-container">
+                    <div class="input-group">
+                        <label for="searchInput">Search:</label>
+                        <input type="text" id="searchInput" placeholder="Search across all fields...">
+                    </div>
+                </div>
+                <div class="filter-container">
+                    <div class="input-group">
+                        <label>Add Filter:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="filterField" style="flex: 1;"></select>
+                            <select id="filterOperator" style="width: 120px;">
+                                <option value="eq">Equals</option>
+                                <option value="neq">Not Equals</option>
+                                <option value="contains">Contains</option>
+                                <option value="gt">Greater Than</option>
+                                <option value="lt">Less Than</option>
+                                <option value="startsWith">Starts With</option>
+                                <option value="endsWith">Ends With</option>
+                            </select>
+                            <input type="text" id="filterValue" placeholder="Value" style="flex: 1;">
+                            <button id="addFilterBtn">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="activeFilters" class="active-filters"></div>
+            
+            <div id="filterStats" class="filter-stats hidden">
+                <span id="recordCount"></span>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div class="pagination-controls">
+                    <button id="prevPage">Previous</button>
+                    <span id="pageInfo" class="page-info">Page 1 of 1</span>
+                    <button id="nextPage">Next</button>
+                </div>
+                <div class="items-per-page">
+                    <label for="itemsPerPage">Items per page:</label>
+                    <select id="itemsPerPage">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="summary" id="dataSummary">
+                <h3>Data Summary</h3>
+                <div id="summaryContent"></div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing data...</p>
+        </div>
+
+        <!-- Modal for displaying full record -->
+        <div id="recordModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Record Details</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div id="modalContent" class="json-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let jsonData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        let itemsPerPage = 25;
+        let activeFilters = [];
+        let sortConfig = {
+            column: null,
+            direction: 'asc'
+        };
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dataContainer = document.getElementById('dataContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const statusMessage = document.getElementById('statusMessage');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const searchInput = document.getElementById('searchInput');
+        const filterField = document.getElementById('filterField');
+        const filterOperator = document.getElementById('filterOperator');
+        const filterValue = document.getElementById('filterValue');
+        const addFilterBtn = document.getElementById('addFilterBtn');
+        const activeFiltersContainer = document.getElementById('activeFilters');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        const summaryContent = document.getElementById('summaryContent');
+
+        // Initialize event listeners
+        function init() {
+            uploadBtn.addEventListener('click', handleFileUpload);
+            searchInput.addEventListener('input', handleSearch);
+            addFilterBtn.addEventListener('click', addFilter);
+            prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
+            nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
+            itemsPerPageSelect.addEventListener('change', () => {
+                itemsPerPage = parseInt(itemsPerPageSelect.value);
+                goToPage(1);
+            });
+            
+            // Modal close event
+            document.querySelector('.close-modal').addEventListener('click', closeModal);
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('recordModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+        
+        // Show modal with record details
+        function showRecordModal(record) {
+            const modal = document.getElementById('recordModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Format the JSON with syntax highlighting
+            const formattedJson = JSON.stringify(record, null, 4);
+            modalContent.textContent = formattedJson;
+            
+            // Show the modal
+            modal.style.display = 'block';
+        }
+        
+        // Close the modal
+        function closeModal() {
+            document.getElementById('recordModal').style.display = 'none';
+        }
+
+        // Handle file upload
+        async function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showStatus('Please select a JSON file', 'error');
+                return;
+            }
+
+            if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+                showStatus('Invalid file format. Please upload a JSON file', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const fileContent = await readFile(file);
+                processJsonData(fileContent);
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                showLoading(false);
+            }
+        }
+
+        // Read file content
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = event => resolve(event.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsText(file);
+            });
+        }
+
+        // Process JSON data
+        function processJsonData(content) {
+            try {
+                // Parse JSON content
+                jsonData = JSON.parse(content);
+
+                // Validate data structure (array of objects)
+                if (!Array.isArray(jsonData)) {
+                    throw new Error('JSON must be an array of objects');
+                }
+
+                if (jsonData.length === 0) {
+                    throw new Error('JSON array is empty');
+                }
+
+                if (typeof jsonData[0] !== 'object' || jsonData[0] === null) {
+                    throw new Error('JSON array must contain objects');
+                }
+
+                // Reset filters and sorting
+                activeFilters = [];
+                sortConfig = { column: null, direction: 'asc' };
+                currentPage = 1;
+
+                // Initialize UI with the data
+                initializeFields();
+                applyFiltersAndSort();
+                generateSummary();
+                showDataContainer(true);
+                showStatus(`Successfully loaded ${jsonData.length} records`, 'success');
+            } catch (error) {
+                showStatus(`Invalid JSON format: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Initialize fields for filtering and table headers
+        function initializeFields() {
+            // Get all unique fields from the JSON data
+            const fields = new Set();
+            jsonData.forEach(item => {
+                Object.keys(item).forEach(key => fields.add(key));
+            });
+
+            // Sort fields alphabetically
+            const sortedFields = Array.from(fields).sort();
+
+            // Clear filter field dropdown
+            filterField.innerHTML = '';
+
+            // Populate filter field dropdown
+            sortedFields.forEach(field => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = field;
+                filterField.appendChild(option);
+            });
+
+            // Set up table header
+            setupTableHeader(sortedFields);
+        }
+
+        // Set up table headers
+        function setupTableHeader(fields) {
+            tableHead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+
+            fields.forEach(field => {
+                const th = document.createElement('th');
+                th.textContent = field;
+                th.dataset.field = field;
+                th.addEventListener('click', () => handleSort(field));
+                headerRow.appendChild(th);
+            });
+
+            tableHead.appendChild(headerRow);
+        }
+
+        // Handle search across all fields
+        function handleSearch() {
+            applyFiltersAndSort();
+        }
+        function addFilter() {
+            const field = filterField.value;
+            const operator = filterOperator.value;
+            const value = filterValue.value.trim();
+
+            if (!field || !value) {
+                showStatus('Please select a field and enter a value', 'error');
+                return;
+            }
+
+            // Create filter object
+            const filter = {
+                id: Date.now(), // Unique ID for filter
+                field,
+                operator,
+                value
+            };
+
+            activeFilters.push(filter);
+            displayActiveFilters();
+            applyFiltersAndSort();
+            filterValue.value = '';
+        }
+
+        // Display active filters as tags
+        function displayActiveFilters() {
+            activeFiltersContainer.innerHTML = '';
+
+            if (activeFilters.length === 0) {
+                return;
+            }
+
+            activeFilters.forEach(filter => {
+                const filterTag = document.createElement('div');
+                filterTag.className = 'filter-tag';
+
+                // Get readable operator name
+                const operatorText = {
+                    'eq': '=',
+                    'neq': '≠',
+                    'contains': 'contains',
+                    'gt': '>',
+                    'lt': '<',
+                    'startsWith': 'starts with',
+                    'endsWith': 'ends with'
+                }[filter.operator];
+
+                filterTag.innerHTML = `
+                    <span>${filter.field} ${operatorText} "${filter.value}"</span>
+                    <span class="remove-filter" data-id="${filter.id}">✕</span>
+                `;
+
+                // Add event listener to remove filter
+                filterTag.querySelector('.remove-filter').addEventListener('click', () => {
+                    removeFilter(filter.id);
+                });
+
+                activeFiltersContainer.appendChild(filterTag);
+            });
+        }
+
+        // Remove filter by ID
+        function removeFilter(filterId) {
+            activeFilters = activeFilters.filter(filter => filter.id !== filterId);
+            displayActiveFilters();
+            applyFiltersAndSort();
+        }
+
+        // Apply filters and sorting to data
+        function applyFiltersAndSort() {
+            const searchTerm = searchInput.value.toLowerCase();
+
+            // Filter data based on search term and active filters
+            filteredData = jsonData.filter(item => {
+                // Check if item matches search term (across all fields)
+                const matchesSearch = searchTerm === '' || Object.values(item).some(value => 
+                    String(value).toLowerCase().includes(searchTerm)
+                );
+
+                if (!matchesSearch) return false;
+
+                // Check if item matches all active filters
+                return activeFilters.every(filter => {
+                    const itemValue = item[filter.field];
+                    
+                    // Handle case when field doesn't exist in this item
+                    if (itemValue === undefined) {
+                        return filter.operator === 'neq';
+                    }
+
+                    const stringValue = String(itemValue).toLowerCase();
+                    const filterValue = filter.value.toLowerCase();
+
+                    switch (filter.operator) {
+                        case 'eq': return stringValue === filterValue;
+                        case 'neq': return stringValue !== filterValue;
+                        case 'contains': return stringValue.includes(filterValue);
+                        case 'gt': return Number(itemValue) > Number(filterValue);
+                        case 'lt': return Number(itemValue) < Number(filterValue);
+                        case 'startsWith': return stringValue.startsWith(filterValue);
+                        case 'endsWith': return stringValue.endsWith(filterValue);
+                        default: return true;
+                    }
+                });
+            });
+
+            // Apply sorting if configured
+            if (sortConfig.column) {
+                filteredData.sort((a, b) => {
+                    const valueA = a[sortConfig.column] !== undefined ? a[sortConfig.column] : '';
+                    const valueB = b[sortConfig.column] !== undefined ? b[sortConfig.column] : '';
+
+                    // Try numeric comparison if both values are numbers
+                    if (!isNaN(valueA) && !isNaN(valueB)) {
+                        return sortConfig.direction === 'asc' 
+                            ? Number(valueA) - Number(valueB) 
+                            : Number(valueB) - Number(valueA);
+                    }
+
+                    // Otherwise use string comparison
+                    const strA = String(valueA).toLowerCase();
+                    const strB = String(valueB).toLowerCase();
+                    
+                    if (sortConfig.direction === 'asc') {
+                        return strA.localeCompare(strB);
+                    } else {
+                        return strB.localeCompare(strA);
+                    }
+                });
+            }
+
+            // Update record count statistics
+            updateFilterStats();
+
+            // Update UI
+            updateTableBody();
+            updatePagination();
+        }
+        function updateFilterStats(){
+        // Update the filter statistics
+        // Add a new filter
+            const filterStats = document.getElementById('filterStats');
+            const recordCount = document.getElementById('recordCount');
+            
+            // Check if we're filtering
+            const isFiltering = searchInput.value.trim() !== '' || activeFilters.length > 0;
+            
+            if (isFiltering) {
+                filterStats.classList.remove('hidden');
+                
+                const totalRecords = jsonData.length;
+                const filteredRecords = filteredData.length;
+                const percentageShown = Math.round((filteredRecords / totalRecords) * 100);
+                
+                recordCount.innerHTML = `
+                    <strong>${filteredRecords}</strong> records found 
+                    (${percentageShown}% of total ${totalRecords} records)
+                `;
+                
+                // Add more detail if specific filters are active
+                if (activeFilters.length > 0) {
+                    recordCount.innerHTML += ` | <strong>${activeFilters.length}</strong> active ${activeFilters.length === 1 ? 'filter' : 'filters'}`;
+                }
+                
+                // Add search term info if used
+                if (searchInput.value.trim() !== '') {
+                    recordCount.innerHTML += ` | Search: "${searchInput.value.trim()}"`;
+                }
+            } else {
+                filterStats.classList.add('hidden');
+            }
+        }
+        
+
+        // Handle sorting when clicking on a column header
+        function handleSort(column) {
+            // Update header styling
+            const headers = tableHead.querySelectorAll('th');
+            headers.forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            // Determine new sort direction
+            if (sortConfig.column === column) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.column = column;
+                sortConfig.direction = 'asc';
+            }
+
+            // Add sort indicator
+            const header = document.querySelector(`th[data-field="${column}"]`);
+            header.classList.add(`sort-${sortConfig.direction}`);
+
+            // Apply sort
+            applyFiltersAndSort();
+        }
+
+        // Update table body with filtered and sorted data
+        function updateTableBody() {
+            tableBody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = tableHead.querySelectorAll('th').length;
+                cell.textContent = 'No data available';
+                cell.style.textAlign = 'center';
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+                return;
+            }
+
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+
+            // Create rows for paginated data
+            paginatedData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.dataset.index = startIndex + index; // Store index for modal
+                
+                // Get all fields from table header
+                const fields = Array.from(tableHead.querySelectorAll('th')).map(th => th.dataset.field);
+                
+                fields.forEach(field => {
+                    const cell = document.createElement('td');
+                    const value = item[field];
+                    
+                    // Handle undefined values
+                    cell.textContent = value !== undefined ? value : '';
+                    
+                    // Add click event for cell
+                    cell.addEventListener('click', () => showRecordModal(item));
+                    
+                    row.appendChild(cell);
+                });
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update pagination controls
+        function updatePagination() {
+            const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+            currentPage = Math.min(currentPage, totalPages);
+            
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+        }
+
+        // Go to specific page
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            
+            currentPage = page;
+            updateTableBody();
+            updatePagination();
+        }
+
+        // Generate data summary
+        function generateSummary() {
+            const totalRecords = jsonData.length;
+            const keys = Object.keys(jsonData[0] || {});
+            
+            let summaryHTML = `
+                <p><strong>Total Records:</strong> ${totalRecords}</p>
+                <p><strong>Fields:</strong> ${keys.length}</p>
+                <p><strong>Field Names:</strong> ${keys.join(', ')}</p>
+            `;
+            
+            summaryContent.innerHTML = summaryHTML;
+        }
+
+        // Show/hide loading indicator
+        function showLoading(show) {
+            loadingIndicator.classList.toggle('hidden', !show);
+        }
+
+        // Show data container
+        function showDataContainer(show) {
+            dataContainer.classList.toggle('hidden', !show);
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden', 'error', 'success');
+            statusMessage.classList.add(type);
+            
+            // Auto hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Initialize when document is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
