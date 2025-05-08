@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pretty JSON</title>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --bg-light: #FFFFFF;
+            --text-light: #1F2937;
+            --bg-dark: #111827;
+            --text-dark: #F9FAFB;
+            --border-light: #E5E7EB;
+            --border-dark: #374151;
+            --error: #EF4444;
+            --success: #10B981;
+            --json-string: #16A34A;
+            --json-number: #2563EB;
+            --json-boolean: #9333EA;
+            --json-null: #DC2626;
+            --json-key: #0284C7;
+            --active-link: #6366F1;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        header {
+            padding: 1rem;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                flex-direction: row;
+            }
+        }
+
+        .panel {
+            flex: 1;
+            border-radius: 0.5rem;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-light);
+            transition: border-color 0.3s, background-color 0.3s;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .panel {
+            background-color: var(--bg-dark);
+            border-color: var(--border-dark);
+        }
+
+        .panel-header {
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 0.75rem;
+            height: 500px;
+            overflow: auto;
+        }
+
+        #json-input {
+            width: 100%;
+            height: 100%;
+            resize: none;
+            border: none;
+            outline: none;
+            background-color: transparent;
+            color: inherit;
+            font-family: monospace;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        #json-output {
+            white-space: pre;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        #json-tree {
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .json-tree-item {
+            margin-left: 1.25rem;
+        }
+
+        .json-tree-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .json-tree-toggle::before {
+            content: '▶';
+            display: inline-block;
+            margin-right: 0.25rem;
+            transition: transform 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .json-tree-toggle.open::before {
+            transform: rotate(90deg);
+        }
+
+        .json-tree-key {
+            color: var(--json-key);
+            font-weight: 600;
+        }
+
+        .json-tree-value {
+            margin-left: 0.5rem;
+        }
+
+        .json-tree-type {
+            color: #6B7280;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .json-string {
+            color: var(--json-string);
+        }
+
+        .json-number {
+            color: var(--json-number);
+        }
+
+        .json-boolean {
+            color: var(--json-boolean);
+        }
+
+        .json-null {
+            color: var(--json-null);
+        }
+
+        .button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-outlined {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .button-outlined:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .dark-mode .button-outlined {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .dark-mode .button-outlined:hover {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #CCC;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .dark-mode .tabs {
+            border-color: var(--border-dark);
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .tab.active {
+            border-color: var(--active-link);
+            color: var(--active-link);
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+            color: white;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.success {
+            background-color: var(--success);
+        }
+
+        .notification.error {
+            background-color: var(--error);
+        }
+
+        .line-numbers {
+            counter-reset: line;
+            padding-right: 0.5rem;
+            text-align: right;
+            color: #6B7280;
+            user-select: none;
+        }
+
+        .line-numbers span {
+            counter-increment: line;
+            display: block;
+            line-height: 1.5;
+        }
+
+        .line-numbers span::before {
+            content: counter(line);
+        }
+
+        .code-container {
+            display: flex;
+        }
+
+        /* Tree view specific styles */
+        .tree-container .json-tree-item {
+            position: relative;
+        }
+
+        .tree-container .json-tree-item::before {
+            content: "";
+            position: absolute;
+            left: -10px;
+            top: 0;
+            height: 100%;
+            border-left: 1px dotted #6B7280;
+        }
+
+        .tree-container .json-tree-item:last-child::before {
+            height: 10px;
+        }
+
+        .tree-container .json-tree-item > .json-tree-toggle::after {
+            content: "";
+            position: absolute;
+            left: -10px;
+            top: 10px;
+            width: 8px;
+            border-top: 1px dotted #6B7280;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .indent-options {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .indent-options select {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border-light);
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        .dark-mode .indent-options select {
+            border-color: var(--border-dark);
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        @media (max-width: 767px) {
+            .panel-content {
+                height: 300px;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .toolbar-group {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        .sample-json {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .sample-json button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0.25rem 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .sample-json button:hover {
+            color: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pretty JSON</h1>
+    </header>
+
+    <div class="container">
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button id="prettify-btn" class="button">Prettify</button>
+                <button id="clear-btn" class="button button-outlined">Clear</button>
+                <button id="copy-btn" class="button button-outlined">Copy</button>
+            </div>
+            <div class="toolbar-group">
+                <div class="indent-options">
+                    <label for="indent-size">Indent:</label>
+                    <select id="indent-size">
+                        <option value="2">2 spaces</option>
+                        <option value="4" selected>4 spaces</option>
+                        <option value="6">6 spaces</option>
+                        <option value="tab">Tab</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dark-mode-toggle">Dark Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>JSON Input</div>
+                    <div class="sample-json">
+                        <button id="sample-json-btn">Load Sample</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <textarea id="json-input" placeholder="Paste your JSON here..."></textarea>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>JSON Output</div>
+                </div>
+                <div class="tabs">
+                    <div class="tab active" data-tab="formatted">Formatted</div>
+                    <div class="tab" data-tab="tree">Tree View</div>
+                </div>
+                <div class="panel-content">
+                    <div id="formatted-tab" class="tab-content active">
+                        <div class="code-container">
+                            <div class="line-numbers" id="line-numbers"></div>
+                            <pre id="json-output"></pre>
+                        </div>
+                    </div>
+                    <div id="tree-tab" class="tab-content">
+                        <div class="tree-container" id="json-tree"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <footer>
+        <p>Built with ❤️ by Chandan & AI</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const jsonInput = document.getElementById('json-input');
+            const jsonOutput = document.getElementById('json-output');
+            const jsonTree = document.getElementById('json-tree');
+            const lineNumbers = document.getElementById('line-numbers');
+            const prettifyBtn = document.getElementById('prettify-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const indentSize = document.getElementById('indent-size');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const notification = document.getElementById('notification');
+            const sampleJsonBtn = document.getElementById('sample-json-btn');
+
+            // Sample JSON
+            const sampleJson = {
+                "glossary": {
+                    "title": "example glossary",
+                    "GlossDiv": {
+                        "title": "S",
+                        "GlossList": {
+                            "GlossEntry": {
+                                "ID": "SGML",
+                                "SortAs": "SGML",
+                                "GlossTerm": "Standard Generalized Markup Language",
+                                "Acronym": "SGML",
+                                "Abbrev": "ISO 8879:1986",
+                                "GlossDef": {
+                                    "para": "A meta-markup language, used to create markup languages such as DocBook.",
+                                    "GlossSeeAlso": ["GML", "XML"]
+                                },
+                                "GlossSee": "markup"
+                            }
+                        }
+                    }
+                },
+                "numbers": [1, 2, 3, 4, 5],
+                "boolean": true,
+                "null": null,
+                "string": "Hello World"
+            };
+
+            // Check for saved state
+            loadFromLocalStorage();
+
+            // Initialize dark mode
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.checked = true;
+            }
+
+            // Event listeners
+            prettifyBtn.addEventListener('click', prettifyJson);
+            clearBtn.addEventListener('click', clearJson);
+            copyBtn.addEventListener('click', copyToClipboard);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            sampleJsonBtn.addEventListener('click', loadSampleJson);
+            
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    // Set active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    // Show tab content
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                });
+            });
+
+            // Auto-format if there's already content
+            if (jsonInput.value.trim()) {
+                prettifyJson();
+            }
+
+            // Functions
+            function prettifyJson() {
+                const input = jsonInput.value.trim();
+                if (!input) {
+                    showNotification('Please enter JSON first', 'error');
+                    return;
+                }
+
+                try {
+                    const parsedJson = JSON.parse(input);
+                    const indentValue = indentSize.value === 'tab' ? '\t' : Number(indentSize.value);
+                    const formattedJson = JSON.stringify(parsedJson, null, indentValue);
+                    
+                    // Display formatted JSON
+                    jsonOutput.innerHTML = syntaxHighlight(formattedJson);
+                    
+                    // Generate line numbers
+                    const lines = formattedJson.split('\n');
+                    lineNumbers.innerHTML = lines.map(() => '<span></span>').join('');
+                    
+                    // Create tree view
+                    jsonTree.innerHTML = '';
+                    createTreeView(parsedJson, jsonTree);
+                    
+                    // Save to local storage
+                    saveToLocalStorage(input);
+                    
+                    showNotification('JSON parsed successfully', 'success');
+                } catch (error) {
+                    showNotification('Invalid JSON: ' + error.message, 'error');
+                }
+            }
+
+            function syntaxHighlight(json) {
+                json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+                    let cls = 'json-number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'json-key';
+                            match = match.replace(/:$/, '');
+                        } else {
+                            cls = 'json-string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'json-boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'json-null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            }
+
+            function createTreeView(data, parent, key = null) {
+                const type = Array.isArray(data) ? 'array' : typeof data;
+                
+                // Create container for this item
+                const container = document.createElement('div');
+                container.className = 'json-tree-item';
+                
+                // Create label/toggle
+                const label = document.createElement('div');
+                
+                if (type === 'object' && data !== null || type === 'array') {
+                    label.className = 'json-tree-toggle';
+                    
+                    const isArray = Array.isArray(data);
+                    const itemCount = isArray ? data.length : Object.keys(data).length;
+                    let displayText = key !== null ? `"${key}"` : '';
+                    
+                    if (isArray) {
+                        displayText += displayText ? ': ' : '';
+                        displayText += `Array(${itemCount})`;
+                    } else {
+                        displayText += displayText ? ': ' : '';
+                        displayText += `Object(${itemCount})`;
+                    }
+                    
+                    label.innerHTML = `<span class="json-tree-key">${displayText}</span>`;
+                    
+                    // Make it toggleable
+                    const content = document.createElement('div');
+                    content.className = 'json-tree-content';
+                    content.style.display = 'none';
+                    
+                    label.addEventListener('click', function() {
+                        this.classList.toggle('open');
+                        content.style.display = this.classList.contains('open') ? 'block' : 'none';
+                    });
+                    
+                    // Add children
+                    if (isArray) {
+                        data.forEach((item, index) => {
+                            createTreeView(item, content, index);
+                        });
+                    } else {
+                        Object.keys(data).forEach(k => {
+                            createTreeView(data[k], content, k);
+                        });
+                    }
+                    
+                    container.appendChild(label);
+                    container.appendChild(content);
+                } else {
+                    // Simple value
+                    let displayKey = key !== null ? `"${key}"` : '';
+                    let displayValue = '';
+                    
+                    if (type === 'string') {
+                        displayValue = `"${data}"`;
+                    } else if (data === null) {
+                        displayValue = 'null';
+                    } else {
+                        displayValue = String(data);
+                    }
+                    
+                    label.innerHTML = `
+                        <span class="json-tree-key">${displayKey}</span>
+                        <span class="json-tree-value json-${type}">${displayValue}</span>
+                        <span class="json-tree-type">(${data === null ? 'null' : type})</span>
+                    `;
+                    container.appendChild(label);
+                }
+                
+                parent.appendChild(container);
+            }
+
+            function clearJson() {
+                jsonInput.value = '';
+                jsonOutput.innerHTML = '';
+                jsonTree.innerHTML = '';
+                lineNumbers.innerHTML = '';
+                localStorage.removeItem('savedJson');
+                showNotification('Cleared', 'success');
+            }
+
+            function copyToClipboard() {
+                if (!jsonOutput.textContent) {
+                    showNotification('Nothing to copy', 'error');
+                    return;
+                }
+                
+                const formattedJson = jsonOutput.textContent;
+                navigator.clipboard.writeText(formattedJson).then(() => {
+                    showNotification('Copied to clipboard', 'success');
+                }).catch(err => {
+                    showNotification('Failed to copy: ' + err, 'error');
+                });
+            }
+
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            }
+
+            function showNotification(message, type) {
+                notification.textContent = message;
+                notification.className = 'notification ' + type;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            function saveToLocalStorage(jsonContent) {
+                localStorage.setItem('savedJson', jsonContent);
+            }
+
+            function loadFromLocalStorage() {
+                const savedJson = localStorage.getItem('savedJson');
+                if (savedJson) {
+                    jsonInput.value = savedJson;
+                }
+            }
+
+            function loadSampleJson() {
+                jsonInput.value = JSON.stringify(sampleJson, null, 2);
+                prettifyJson();
+            }
+        });
+    </script>
+</body>
+</html>
