@@ -18,13 +18,19 @@ Use them in the browser, clone them locally, or extend them as building blocks i
 ### 📊 JSON 2 Table
 Visualize any JSON array as an interactive HTML table.
 
-- Upload JSON
-- View data in a tabular format
+- Upload JSON and view data in a tabular format
 - Supports search, sort, filter, and row count
 - Ideal for quick inspection of API responses or data dumps
 
 👉 [Get it here](./json2table.html)
 
+### 🔍 Pretty JSON
+Format, visualize, and explore JSON data with a clean interface.
+
+- Validate and prettify JSON with customizable indentation
+- Interactive tree view for exploring nested structures
+
+👉 [Get it here](./pretty-json.html)
 
 ## 🛣️ Planned Tools
 
