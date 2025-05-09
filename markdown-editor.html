@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadMark - Markdown Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <style>
+        :root {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #282a36;
+            --text-primary: #f8f8f2;
+            --text-secondary: #bbbbbb;
+            --accent: #bd93f9;
+            --accent-secondary: #8be9fd;
+            --success: #50fa7b;
+            --warning: #ffb86c;
+            --error: #ff5555;
+            --border: #44475a;
+            --editor-bg: #282a36;
+            --preview-bg: #282a36;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --accent: #6c5ce7;
+            --accent-secondary: #0984e3;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --error: #d63031;
+            --border: #dee2e6;
+            --editor-bg: #f8f9fa;
+            --preview-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Cascadia Code', 'Source Code Pro', monospace;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .logo span {
+            color: var(--text-secondary);
+        }
+
+        nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--border);
+        }
+
+        main {
+            display: flex;
+            height: calc(100vh - 60px - 40px);
+        }
+
+        .toolbar {
+            padding: 0.5rem;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .toolbar button {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease;
+        }
+
+        .toolbar button:hover {
+            background-color: var(--border);
+        }
+
+        .toolbar .separator {
+            width: 1px;
+            background-color: var(--border);
+        }
+
+        .template-select {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            border-right: 1px solid var(--border);
+        }
+
+        #editor {
+            flex-grow: 1;
+            resize: none;
+            padding: 1rem;
+            font-family: 'Fira Code', 'Cascadia Code', 'Source Code Pro', monospace;
+            background-color: var(--editor-bg);
+            color: var(--text-primary);
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            line-height: 1.6;
+            tab-size: 2;
+        }
+
+        .preview-container {
+            width: 50%;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: var(--preview-bg);
+        }
+
+        #preview {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        #preview h1, #preview h2 {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3rem;
+            margin-bottom: 1rem;
+        }
+
+        #preview h1 {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+
+        #preview h2 {
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            color: var(--accent-secondary);
+        }
+
+        #preview h3 {
+            font-size: 1.2rem;
+            margin-top: 1.2rem;
+        }
+
+        #preview p {
+            margin-bottom: 1rem;
+        }
+
+        #preview ul, #preview ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        #preview code {
+            font-family: 'Fira Code', 'Cascadia Code', 'Source Code Pro', monospace;
+            background-color: var(--bg-secondary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        #preview pre {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        #preview pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        #preview blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            margin-left: 0;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        #preview table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        #preview th, #preview td {
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        #preview th {
+            background-color: var(--bg-secondary);
+        }
+
+        #preview img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .success {
+            background-color: var(--success);
+            color: var(--bg-primary);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--success);
+            color: white;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            margin-bottom: 1rem;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .shortcut-item:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-key {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--bg-primary);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .editor-container, .preview-container {
+                width: 100%;
+                height: 50vh;
+            }
+
+            .editor-container {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <header>
+        <div class="logo">
+            <h1>ReadMark<span> MarkDown Editor</span></h1>
+        </div>
+        <nav>
+            <button id="shortcuts-btn" class="theme-toggle">⌨️ Shortcuts</button>
+            <button id="theme-toggle" class="theme-toggle">🌓 Theme</button>
+        </nav>
+    </header>
+
+    <div class="toolbar">
+        <button id="h1-btn" title="Heading 1 (Ctrl+1)">H1</button>
+        <button id="h2-btn" title="Heading 2 (Ctrl+2)">H2</button>
+        <button id="h3-btn" title="Heading 3 (Ctrl+3)">H3</button>
+        <div class="separator"></div>
+        <button id="bold-btn" title="Bold (Ctrl+B)">B</button>
+        <button id="italic-btn" title="Italic (Ctrl+I)">I</button>
+        <button id="code-btn" title="Inline Code (Ctrl+`)">Code</button>
+        <div class="separator"></div>
+        <button id="list-btn" title="List">• List</button>
+        <button id="ol-btn" title="Numbered List">1. List</button>
+        <button id="quote-btn" title="Blockquote">" Quote</button>
+        <button id="codeblock-btn" title="Code Block (Ctrl+Shift+C)">{ } Block</button>
+        <button id="table-btn" title="Table">Table</button>
+        <button id="link-btn" title="Link (Ctrl+K)">🔗 Link</button>
+        <button id="image-btn" title="Image">🖼️ Image</button>
+        <div class="separator"></div>
+        <select id="template-select" class="template-select">
+            <option value="">+ Insert Template</option>
+            <option value="basic">Basic README</option>
+            <option value="detailed">Detailed README</option>
+            <option value="badges">Badges</option>
+            <option value="installation">Installation Section</option>
+            <option value="usage">Usage Section</option>
+            <option value="api">API Documentation</option>
+            <option value="license">License Section</option>
+            <option value="contributing">Contributing Guidelines</option>
+        </select>
+        <div class="separator"></div>
+        <button id="copy-btn" title="Copy Markdown">📋 Copy</button>
+        <button id="download-btn" title="Download README.md">💾 Download</button>
+    </div>
+
+    <main>
+        <div class="editor-container">
+            <textarea id="editor" spellcheck="false" placeholder="# Start writing your README here..."></textarea>
+        </div>
+        <div class="preview-container">
+            <div id="preview"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div>
+            <span class="saved-status">Last saved: Never</span>
+        </div>
+        <div>
+            <span>ReadMark · Made with ❤️ by Chandan & AI</span>
+        </div>
+    </footer>
+
+    <div id="notification" class="notification">Copied to clipboard!</div>
+
+    <!-- Shortcuts modal -->
+    <div id="shortcuts-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Keyboard Shortcuts</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcut-item">
+                    <span>Save to local storage</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">S</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Heading 1</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">1</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Heading 2</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">2</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Heading 3</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">3</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Bold</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">B</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Italic</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">I</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Inline Code</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">`</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Code Block</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Shift</span> + <span class="shortcut-key">C</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Link</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">K</span></span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Copy Markdown</span>
+                    <span><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Shift</span> + <span class="shortcut-key">C</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marked.js for markdown parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <!-- highlight.js for code syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    
+    <script>
+        // DOM Elements
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const themeToggle = document.getElementById('theme-toggle');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const notification = document.getElementById('notification');
+        const templateSelect = document.getElementById('template-select');
+        const savedStatus = document.querySelector('.saved-status');
+        const shortcutsBtn = document.getElementById('shortcuts-btn');
+        const shortcutsModal = document.getElementById('shortcuts-modal');
+        const modalClose = document.querySelector('.modal-close');
+
+        // Toolbar buttons
+        const h1Btn = document.getElementById('h1-btn');
+        const h2Btn = document.getElementById('h2-btn');
+        const h3Btn = document.getElementById('h3-btn');
+        const boldBtn = document.getElementById('bold-btn');
+        const italicBtn = document.getElementById('italic-btn');
+        const codeBtn = document.getElementById('code-btn');
+        const listBtn = document.getElementById('list-btn');
+        const olBtn = document.getElementById('ol-btn');
+        const quoteBtn = document.getElementById('quote-btn');
+        const codeblockBtn = document.getElementById('codeblock-btn');
+        const tableBtn = document.getElementById('table-btn');
+        const linkBtn = document.getElementById('link-btn');
+        const imageBtn = document.getElementById('image-btn');
+
+        // Templates
+        const templates = {
+            basic: `# Project Name
+
+A brief description of what this project does and who it's for.
+
+## Installation
+
+\`\`\`bash
+npm install my-project
+\`\`\`
+
+## Usage
+
+\`\`\`javascript
+import myProject from 'my-project';
+
+// Usage example
+myProject.doSomething();
+\`\`\`
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
+`,
+            detailed: `# Project Name
+
+![Version](https://img.shields.io/badge/version-0.1.0-blue.svg?cacheSeconds=2592000)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+> A clear and concise description of your project
+
+## 🏠 Homepage
+
+[https://github.com/username/project](https://github.com/username/project)
+
+## ✨ Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## 🚀 Installation
+
+\`\`\`sh
+npm install my-project
+\`\`\`
+
+## 📖 Usage
+
+\`\`\`js
+import myProject from 'my-project';
+
+// Example code
+myProject.doSomething();
+\`\`\`
+
+## 🔧 Configuration
+
+Explain how to configure your package:
+
+\`\`\`js
+// config.js
+module.exports = {
+  option1: 'value',
+  option2: 'value'
+};
+\`\`\`
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome!
+
+Feel free to check [issues page](https://github.com/username/project/issues).
+
+## 📝 License
+
+Copyright © 2025 [Your Name](https://github.com/username).
+
+This project is [MIT](https://choosealicense.com/licenses/mit/) licensed.
+`,
+            badges: `[![Version](https://img.shields.io/npm/v/project-name.svg)](https://www.npmjs.com/package/project-name)
+[![Downloads](https://img.shields.io/npm/dt/project-name.svg)](https://www.npmjs.com/package/project-name)
+[![Build Status](https://img.shields.io/travis/username/project-name/master.svg)](https://travis-ci.org/username/project-name)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/username/project/branch/master/graph/badge.svg)](https://codecov.io/gh/username/project)
+`,
+            installation: `## Installation
+
+### NPM
+
+\`\`\`bash
+npm install project-name
+\`\`\`
+
+### Yarn
+
+\`\`\`bash
+yarn add project-name
+\`\`\`
+
+### From Source
+
+\`\`\`bash
+git clone https://github.com/username/project-name.git
+cd project-name
+npm install
+npm run build
+\`\`\`
+`,
+            usage: `## Usage
+
+\`\`\`javascript
+import { feature } from 'project-name';
+
+// Basic usage
+feature.init();
+
+// Advanced configuration
+feature.init({
+  option1: 'value',
+  option2: true,
+  callback: () => {
+    console.log('Initialized!');
+  }
+});
+\`\`\`
+
+### Examples
+
+#### Example 1: Basic Implementation
+
+\`\`\`javascript
+// Code example here
+\`\`\`
+
+#### Example 2: Advanced Implementation
+
+\`\`\`javascript
+// Code example here
+\`\`\`
+`,
+            api: `## API Reference
+
+### \`function1(param1, param2)\`
+
+Description of what this function does.
+
+**Parameters:**
+
+- \`param1\` (Type): Description of param1
+- \`param2\` (Type): Description of param2
+
+**Returns:**
+
+- (Type): Description of return value
+
+**Example:**
+
+\`\`\`javascript
+const result = function1('value1', 'value2');
+console.log(result);
+\`\`\`
+
+### \`function2(options)\`
+
+Description of what this function does.
+
+**Parameters:**
+
+- \`options\` (Object): Configuration options
+  - \`option1\` (String): Description of option1
+  - \`option2\` (Boolean): Description of option2
+
+**Returns:**
+
+- (Type): Description of return value
+
+**Example:**
+
+\`\`\`javascript
+const result = function2({
+  option1: 'value',
+  option2: true
+});
+\`\`\`
+`,
+            license: `## License
+
+This project is licensed under the MIT License - see below for details:
+
+MIT License
+
+Copyright (c) 2025 Your Name
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`,
+            contributing: `## Contributing
+
+Contributions are always welcome!
+
+### Code of Conduct
+
+Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+
+### How to Contribute
+
+1. Fork the project
+2. Create your feature branch (\`git checkout -b feature/amazing-feature\`)
+3. Commit your changes (\`git commit -m 'Add some amazing feature'\`)
+4. Push to the branch (\`git push origin feature/amazing-feature\`)
+5. Open a Pull Request
+
+### Development Setup
+
+\`\`\`bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build the project
+npm run build
+\`\`\`
+
+### Pull Request Process
+
+1. Update the README.md with details of changes if applicable
+2. Update the CHANGELOG.md with details of changes
+3. The PR will be merged once you have the sign-off of the maintainers
+`
+        };
+
+        // Initialize marked with options
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-',
+            gfm: true,
+            breaks: true
+        });
+
+        // Functions
+        function renderPreview() {
+            const markdown = editor.value;
+            preview.innerHTML = marked.parse(markdown);
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('readme-content', editor.value);
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            savedStatus.textContent = `Last saved: ${timeStr}`;
+            showNotification('Saved to local storage');
+        }
+
+        function loadFromLocalStorage() {
+            const savedContent = localStorage.getItem('readme-content');
+            if (savedContent) {
+                editor.value = savedContent;
+                renderPreview();
+                const lastSaved = localStorage.getItem('readme-last-saved');
+                if (lastSaved) {
+                    savedStatus.textContent = `Last saved: ${lastSaved}`;
+                }
+            } else {
+                // Load default starter template if nothing saved
+                editor.value = `# My Awesome Project
+
+## Description
+A clear and concise description of what this project does.
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+\`\`\`bash
+npm install my-project
+\`\`\`
+
+## Usage
+\`\`\`javascript
+import myProject from 'my-project';
+
+// Usage example
+myProject.doSomething();
+\`\`\`
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
+`;
+                renderPreview();
+            }
+        }
+
+        function insertAtCursor(before, after = '') {
+            const startPos = editor.selectionStart;
+            const endPos = editor.selectionEnd;
+            const selectedText = editor.value.substring(startPos, endPos);
+            const replacement = before + selectedText + after;
+            editor.value = 
+                editor.value.substring(0, startPos) + 
+                replacement + 
+                editor.value.substring(endPos);
+            
+            // Set cursor position
+            const newPos = after ? startPos + before.length : startPos + replacement.length;
+            editor.focus();
+            editor.selectionStart = newPos;
+            editor.selectionEnd = newPos;
+            
+            renderPreview();
+            saveToLocalStorage();
+        }
+
+        function insertAtLine(text) {
+            const startPos = editor.selectionStart;
+            const lineStart = editor.value.lastIndexOf('\n', startPos - 1) + 1 || 0;
+            
+            editor.value = 
+                editor.value.substring(0, lineStart) + 
+                text + 
+                editor.value.substring(lineStart);
+            
+            editor.focus();
+            editor.selectionStart = lineStart + text.length;
+            editor.selectionEnd = lineStart + text.length;
+            
+            renderPreview();
+            saveToLocalStorage();
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(editor.value).then(() => {
+                showNotification('Copied to clipboard!');
+            });
+        }
+
+        function downloadReadme() {
+            const blob = new Blob([editor.value], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'README.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Downloaded README.md');
+        }
+
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('readme-theme', newTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('readme-theme');
+            if (savedTheme) {
+                document.body.setAttribute('data-theme', savedTheme);
+            }
+        }
+
+        function insertTemplate(templateName) {
+            if (templates[templateName]) {
+                const startPos = editor.selectionStart;
+                editor.value = 
+                    editor.value.substring(0, startPos) + 
+                    templates[templateName] + 
+                    editor.value.substring(startPos);
+                renderPreview();
+                saveToLocalStorage();
+            }
+            templateSelect.value = ''; // Reset select
+        }
+
+        // Sync scrolling between editor and preview
+        function syncScroll() {
+            const editorScrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+            const previewContainer = document.querySelector('.preview-container');
+            previewContainer.scrollTop = editorScrollPercentage * (previewContainer.scrollHeight - previewContainer.clientHeight);
+        }
+
+        // Event Listeners
+        editor.addEventListener('input', () => {
+            renderPreview();
+            // Debounce auto-save
+            clearTimeout(editor.saveTimeout);
+            editor.saveTimeout = setTimeout(saveToLocalStorage, 1000);
+        });
+
+        editor.addEventListener('scroll', syncScroll);
+
+        // Theme toggle
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Toolbar buttons
+        h1Btn.addEventListener('click', () => insertAtLine('# '));
+        h2Btn.addEventListener('click', () => insertAtLine('## '));
+        h3Btn.addEventListener('click', () => insertAtLine('### '));
+        boldBtn.addEventListener('click', () => insertAtCursor('**', '**'));
+        italicBtn.addEventListener('click', () => insertAtCursor('*', '*'));
+        codeBtn.addEventListener('click', () => insertAtCursor('`', '`'));
+        listBtn.addEventListener('click', () => insertAtLine('- '));
+        olBtn.addEventListener('click', () => insertAtLine('1. '));
+        quoteBtn.addEventListener('click', () => insertAtLine('> '));
+        codeblockBtn.addEventListener('click', () => insertAtCursor('```\n', '\n```'));
+        tableBtn.addEventListener('click', () => insertAtCursor('| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n| Row 1, Col 1 | Row 1, Col 2 | Row 1, Col 3 |\n| Row 2, Col 1 | Row 2, Col 2 | Row 2, Col 3 |'));
+        linkBtn.addEventListener('click', () => insertAtCursor('[', '](https://)'));
+        imageBtn.addEventListener('click', () => insertAtCursor('![Alt text](', ')'));
+
+        // Copy and download
+        copyBtn.addEventListener('click', copyToClipboard);
+        downloadBtn.addEventListener('click', downloadReadme);
+
+        // Template selection
+        templateSelect.addEventListener('change', () => {
+            const selectedTemplate = templateSelect.value;
+            if (selectedTemplate) {
+                insertTemplate(selectedTemplate);
+            }
+        });
+
+        // Shortcuts modal
+        shortcutsBtn.addEventListener('click', () => {
+            shortcutsModal.style.display = 'flex';
+        });
+
+        modalClose.addEventListener('click', () => {
+            shortcutsModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === shortcutsModal) {
+                shortcutsModal.style.display = 'none';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Save shortcut (Ctrl+S)
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveToLocalStorage();
+            }
+            
+            // Headings
+            if (e.ctrlKey && e.key === '1') {
+                e.preventDefault();
+                insertAtLine('# ');
+            }
+            if (e.ctrlKey && e.key === '2') {
+                e.preventDefault();
+                insertAtLine('## ');
+            }
+            if (e.ctrlKey && e.key === '3') {
+                e.preventDefault();
+                insertAtLine('### ');
+            }
+            
+            // Formatting
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                insertAtCursor('**', '**');
+            }
+            if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                insertAtCursor('*', '*');
+            }
+            if (e.ctrlKey && e.key === '`') {
+                e.preventDefault();
+                insertAtCursor('`', '`');
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                insertAtCursor('```\n', '\n```');
+            }
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                insertAtCursor('[', '](https://)');
+            }
+        });
+
+        // Initialize
+        loadTheme();
+        loadFromLocalStorage();
+        renderPreview();
+    </script>
+</body>
+</html>
