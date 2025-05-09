@@ -32,6 +32,14 @@ Format, visualize, and explore JSON data with a clean interface.
 
 👉 [Get it here](./pretty-json.html)
 
+### 📝 ReadMark
+Developer-friendly Markdown editor with live preview.
+
+- Create and edit markdown with real-time rendering
+- Multiple templates for common README structures
+
+👉 [Get it here](./markdown-editor.html)
+
 ## 🛣️ Planned Tools
 
 We're just getting started! Some ideas in the pipeline:
