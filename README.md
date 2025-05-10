@@ -40,15 +40,21 @@ Developer-friendly Markdown editor with live preview.
 
 👉 [Get it here](./markdown-editor.html)
 
+### 📡 JWT Decoder
+Developer-friendly JWT Decoder.
+
+- Decode and verify JSON Web Tokens
+- Show payload, header, and signature details
+
+👉 [Get it here](./jwt-decoder.html)
+
 ## 🛣️ Planned Tools
 
 We're just getting started! Some ideas in the pipeline:
 
 - 📝 Regex Tester (pattern + test string)
 - 🔄 Text Case Converter (camelCase, snake_case, Title Case)
-- 📁 JSON Flattener (nested → flat objects)
 - 🧮 UUID / Hash Generator
-- 🖋️ Markdown Previewer
 - ⚖️ Text Diff Viewer
 
 Want to suggest or build one? Open an issue or PR!
