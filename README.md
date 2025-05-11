@@ -15,38 +15,13 @@ Use them in the browser, clone them locally, or extend them as building blocks i
 
 ## 🔧 Existing Tools
 
-### 📊 JSON 2 Table
-Visualize any JSON array as an interactive HTML table.
+| Tool            | Description                                         | Category          | Link                                  |
+|-----------------|-----------------------------------------------------|-------------------|---------------------------------------|
+| 📊 JSON 2 Table | Visualize JSON arrays as interactive HTML tables.   | JSON              | [Get it here](./json2table.html)      |
+| 🔍 Pretty JSON  | Prettify and explore JSON in a tree view.           | JSON              | [Get it here](./pretty-json.html)     |
+| 📝 ReadMark     | Markdown editor with live preview and templates.    | Markdown          | [Get it here](./markdown-editor.html) |
+| 📡 JWT Decoder  | Decode and inspect JWT tokens with details.         | Encoder/Decoder   | [Get it here](./jwt-decoder.html)     |
 
-- Upload JSON and view data in a tabular format
-- Supports search, sort, filter, and row count
-- Ideal for quick inspection of API responses or data dumps
-
-👉 [Get it here](./json2table.html)
-
-### 🔍 Pretty JSON
-Format, visualize, and explore JSON data with a clean interface.
-
-- Validate and prettify JSON with customizable indentation
-- Interactive tree view for exploring nested structures
-
-👉 [Get it here](./pretty-json.html)
-
-### 📝 ReadMark
-Developer-friendly Markdown editor with live preview.
-
-- Create and edit markdown with real-time rendering
-- Multiple templates for common README structures
-
-👉 [Get it here](./markdown-editor.html)
-
-### 📡 JWT Decoder
-Developer-friendly JWT Decoder.
-
-- Decode and verify JSON Web Tokens
-- Show payload, header, and signature details
-
-👉 [Get it here](./jwt-decoder.html)
 
 ## 🛣️ Planned Tools
 
